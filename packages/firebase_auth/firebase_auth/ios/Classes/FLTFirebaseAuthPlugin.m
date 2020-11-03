@@ -731,13 +731,16 @@ FIROAuthProvider *microsoftProvider;
     return;
   }
 
-  [currentUser sendEmailVerificationWithCompletion:^(NSError *_Nullable error) {
-    if (error != nil) {
-      result.error(nil, nil, nil, error);
-    } else {
-      result.success(nil);
-    }
-  }];
+  FIRActionCodeSettings *actionCodeSettings =
+      [self getFIRActionCodeSettingsFromArguments:arguments];
+  [currentUser sendEmailVerificationWithActionCodeSettings:actionCodeSettings
+                                                completion:^(NSError *_Nullable error) {
+                                                  if (error != nil) {
+                                                    result.error(nil, nil, nil, error);
+                                                  } else {
+                                                    result.success(nil);
+                                                  }
+                                                }];
 }
 
 - (void)userUnlink:(id)arguments withMethodCallResult:(FLTFirebaseMethodCallResult *)result {
@@ -1136,10 +1139,18 @@ FIROAuthProvider *microsoftProvider;
   }
 
   NSString *signInMethod = credentialDictionary[kArgumentSignInMethod];
-  NSString *secret = credentialDictionary[kArgumentSecret];
-  NSString *idToken = credentialDictionary[kArgumentIdToken];
-  NSString *accessToken = credentialDictionary[kArgumentAccessToken];
-  NSString *rawNonce = credentialDictionary[kArgumentRawNonce];
+  NSString *secret = credentialDictionary[kArgumentSecret] == [NSNull null]
+                         ? nil
+                         : credentialDictionary[kArgumentSecret];
+  NSString *idToken = credentialDictionary[kArgumentIdToken] == [NSNull null]
+                          ? nil
+                          : credentialDictionary[kArgumentIdToken];
+  NSString *accessToken = credentialDictionary[kArgumentAccessToken] == [NSNull null]
+                              ? nil
+                              : credentialDictionary[kArgumentAccessToken];
+  NSString *rawNonce = credentialDictionary[kArgumentRawNonce] == [NSNull null]
+                           ? nil
+                           : credentialDictionary[kArgumentRawNonce];
 
   // Password Auth
   if ([signInMethod isEqualToString:kSignInMethodPassword]) {
